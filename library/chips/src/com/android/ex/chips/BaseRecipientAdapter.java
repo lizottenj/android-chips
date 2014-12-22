@@ -160,6 +160,24 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
         public TemporaryEntry(
                 String displayName,
                 String destination,
+                String thumbnailUriString)
+        {
+            this.displayName = displayName;
+            this.destination = destination;
+            this.thumbnailUriString = thumbnailUriString;
+
+            this.destinationType = 0;
+            this.destinationLabel = null;
+            this.contactId = 0l;
+            this.directoryId = 0l;
+            this.dataId = 0l;
+            this.displayNameSource = 0;
+            this.lookupKey = null;
+        }
+
+        public TemporaryEntry(
+                String displayName,
+                String destination,
                 int destinationType,
                 String destinationLabel,
                 long contactId,
@@ -198,7 +216,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
      * Used to pass results from {@link DefaultFilter#performFiltering(CharSequence)} to
      * {@link DefaultFilter#publishResults(CharSequence, android.widget.Filter.FilterResults)}
      */
-    private static class DefaultFilterResult {
+    protected static class DefaultFilterResult {
         public final List<RecipientEntry> entries;
         public final LinkedHashMap<Long, List<RecipientEntry>> entryMap;
         public final List<RecipientEntry> nonAggregatedEntries;
@@ -491,9 +509,9 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
      * These variables are only used in UI thread, thus should not be touched in
      * performFiltering() methods.
      */
-    private LinkedHashMap<Long, List<RecipientEntry>> mEntryMap;
-    private List<RecipientEntry> mNonAggregatedEntries;
-    private Set<String> mExistingDestinations;
+    protected LinkedHashMap<Long, List<RecipientEntry>> mEntryMap;
+    protected List<RecipientEntry> mNonAggregatedEntries;
+    protected Set<String> mExistingDestinations;
     /** Note: use {@link #updateEntries(List)} to update this variable. */
     private List<RecipientEntry> mEntries;
     private List<RecipientEntry> mTempEntries;
@@ -505,7 +523,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
      * Used to ignore asynchronous queries with a different constraint, which may happen when
      * users type characters quickly.
      */
-    private CharSequence mCurrentConstraint;
+    protected CharSequence mCurrentConstraint;
 
     private static LruCache<Uri, byte[]> mPhotoCacheMap;
 
@@ -695,7 +713,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
         mDelayedMessageHandler.sendDelayedLoadMessage();
     }
 
-    private static void putOneEntry(TemporaryEntry entry, boolean isAggregatedEntry,
+    protected static void putOneEntry(TemporaryEntry entry, boolean isAggregatedEntry,
             LinkedHashMap<Long, List<RecipientEntry>> entryMap,
             List<RecipientEntry> nonAggregatedEntries,
             Set<String> existingDestinations) {
@@ -738,7 +756,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
      * fetch a cached photo for each contact entry (other than separators), or request another
      * thread to get one from directories.
      */
-    private List<RecipientEntry> constructEntryList(
+    protected List<RecipientEntry> constructEntryList(
             LinkedHashMap<Long, List<RecipientEntry>> entryMap,
             List<RecipientEntry> nonAggregatedEntries) {
         final List<RecipientEntry> entries = new ArrayList<RecipientEntry>();
@@ -782,7 +800,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
     }
 
     /** Resets {@link #mEntries} and notify the event to its parent ListView. */
-    private void updateEntries(List<RecipientEntry> newEntries) {
+    protected void updateEntries(List<RecipientEntry> newEntries) {
         mEntries = newEntries;
         mEntriesUpdatedObserver.onChanged(newEntries);
         notifyDataSetChanged();
@@ -792,7 +810,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
         mTempEntries = mEntries;
     }
 
-    private void clearTempEntries() {
+    protected void clearTempEntries() {
         mTempEntries = null;
     }
 
@@ -800,7 +818,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
         return mTempEntries != null ? mTempEntries : mEntries;
     }
 
-    public static void tryFetchPhoto(final RecipientEntry entry, ContentResolver mContentResolver, BaseAdapter adapter, boolean forceLoad, int position) {
+    public void tryFetchPhoto(final RecipientEntry entry, ContentResolver mContentResolver, BaseAdapter adapter, boolean forceLoad, int position) {
         if (forceLoad || position <= 20) {
             final Uri photoThumbnailUri = entry.getPhotoThumbnailUri();
             if (photoThumbnailUri != null) {
@@ -823,7 +841,8 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
     // copying from the inputstream to the output stream.
     private static final int BUFFER_SIZE = 1024*16;
 
-    private static void fetchPhotoAsync(final RecipientEntry entry, final Uri photoThumbnailUri, final BaseAdapter adapter, final ContentResolver mContentResolver) {
+    private void fetchPhotoAsync(final RecipientEntry entry, final Uri photoThumbnailUri, final BaseAdapter adapter, final ContentResolver mContentResolver) {
+
         final AsyncTask<Void, Void, byte[]> photoLoadTask = new AsyncTask<Void, Void, byte[]>() {
             @Override
             protected byte[] doInBackground(Void... params) {

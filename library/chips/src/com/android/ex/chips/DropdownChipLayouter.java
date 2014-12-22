@@ -4,8 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.text.TextUtils;
-import android.text.util.Rfc822Tokenizer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.ex.chips.Queries.Query;
+import com.android.ex.chips.transform.CircleTransform;
+import com.squareup.picasso.Picasso;
 
 /**
  * A class that inflates and binds the views in the dropdown list from
@@ -59,54 +59,18 @@ public class DropdownChipLayouter {
         AdapterType type, String constraint) {
         // Default to show all the information
         String displayName = entry.getDisplayName();
-        String destination = entry.getDestination();
         boolean showImage = true;
-        CharSequence destinationType = getDestinationType(entry);
 
         final View itemView = reuseOrInflateView(convertView, parent, type);
 
         final ViewHolder viewHolder = new ViewHolder(itemView);
 
-        // Hide some information depending on the entry type and adapter type
-        switch (type) {
-            case BASE_RECIPIENT:
-                if (TextUtils.isEmpty(displayName) || TextUtils.equals(displayName, destination)) {
-                    displayName = destination;
-
-                    // We only show the destination for secondary entries, so clear it only for the
-                    // first level.
-                    if (entry.isFirstLevel()) {
-                        destination = null;
-                    }
-                }
-
-                if (!entry.isFirstLevel()) {
-                    displayName = null;
-                    showImage = false;
-                }
-                break;
-            case RECIPIENT_ALTERNATES:
-                if (position != 0) {
-                    displayName = null;
-                    showImage = false;
-                }
-                break;
-            case SINGLE_RECIPIENT:
-                destination = Rfc822Tokenizer.tokenize(entry.getDestination())[0].getAddress();
-                destinationType = null;
-        }
-
-        if (displayName == null && !showImage) {
-            viewHolder.destinationView.setPadding(mContext.getResources().getDimensionPixelSize(R.dimen.padding_no_picture), 0, 0, 0);
-        } else {
-            viewHolder.destinationView.setPadding(0, 0, 0, 0);
-        }
-
-        // Bind the information to the view
         bindTextToView(displayName, viewHolder.displayNameView);
-        bindTextToView(destination, viewHolder.destinationView);
-        bindTextToView("(" + destinationType + ")", viewHolder.destinationTypeView);
-        bindIconToView(showImage, entry, viewHolder.imageView, type);
+
+        if(showImage)
+        {
+            Picasso.with(parent.getContext()).load(entry.getPhotoThumbnailUri()).transform(new CircleTransform()).into(viewHolder.imageView);
+        }
 
         return itemView;
     }
@@ -144,49 +108,6 @@ public class DropdownChipLayouter {
 
         if (text != null) {
             view.setText(text);
-            view.setVisibility(View.VISIBLE);
-        } else {
-            view.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Binds the avatar icon to the image view. If we don't want to show the image, hides the
-     * image view.
-     */
-    protected void bindIconToView(boolean showImage, RecipientEntry entry, ImageView view,
-        AdapterType type) {
-        if (view == null) {
-            return;
-        }
-
-        if (showImage) {
-            switch (type) {
-                case BASE_RECIPIENT:
-                    byte[] photoBytes = entry.getPhotoBytes();
-                    if (photoBytes != null && photoBytes.length > 0) {
-                        final Bitmap photo = ChipsUtil.getClip(BitmapFactory.decodeByteArray(photoBytes, 0,
-                            photoBytes.length));
-                        view.setImageBitmap(photo);
-                    } else {
-                        BaseRecipientAdapter.tryFetchPhoto(entry, mContext.getContentResolver(), null, true, -1);
-                        view.setImageResource(getDefaultPhotoResId());
-                    }
-                    break;
-                case RECIPIENT_ALTERNATES:
-                    Uri thumbnailUri = entry.getPhotoThumbnailUri();
-                    if (thumbnailUri != null) {
-                        // TODO: see if this needs to be done outside the main thread
-                        // as it may be too slow to get immediately.
-                        view.setImageURI(thumbnailUri);
-                    } else {
-                        view.setImageResource(getDefaultPhotoResId());
-                    }
-                    break;
-                case SINGLE_RECIPIENT:
-                default:
-                    break;
-            }
             view.setVisibility(View.VISIBLE);
         } else {
             view.setVisibility(View.GONE);
@@ -237,23 +158,6 @@ public class DropdownChipLayouter {
     }
 
     /**
-     * Returns an id for TextView in an item View for showing a destination
-     * (an email address or a phone number).
-     * By default {@link android.R.id#text1} is returned.
-     */
-    protected int getDestinationResId() {
-        return android.R.id.text1;
-    }
-
-    /**
-     * Returns an id for TextView in an item View for showing the type of the destination.
-     * By default {@link android.R.id#text2} is returned.
-     */
-    protected int getDestinationTypeResId() {
-        return android.R.id.text2;
-    }
-
-    /**
      * Returns an id for ImageView in an item View for showing photo image for a person. In default
      * {@link android.R.id#icon} is returned.
      */
@@ -267,14 +171,10 @@ public class DropdownChipLayouter {
      */
     protected class ViewHolder {
         public final TextView displayNameView;
-        public final TextView destinationView;
-        public final TextView destinationTypeView;
         public final ImageView imageView;
 
         public ViewHolder(View view) {
             displayNameView = (TextView) view.findViewById(getDisplayNameResId());
-            destinationView = (TextView) view.findViewById(getDestinationResId());
-            destinationTypeView = (TextView) view.findViewById(getDestinationTypeResId());
             imageView = (ImageView) view.findViewById(getPhotoResId());
         }
     }

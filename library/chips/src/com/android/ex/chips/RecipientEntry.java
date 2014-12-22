@@ -143,7 +143,7 @@ public class RecipientEntry {
      */
     private static String pickDisplayName(int displayNameSource, String displayName,
             String destination) {
-        return (displayNameSource > DisplayNameSources.PHONE) ? displayName : destination;
+        return displayName;
     }
 
     /**
