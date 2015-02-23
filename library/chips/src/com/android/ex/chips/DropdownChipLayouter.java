@@ -1,18 +1,15 @@
 package com.android.ex.chips;
 
+import com.android.ex.chips.Queries.Query;
+import com.android.ex.chips.transform.CircleTransform;
+import com.squareup.picasso.Picasso;
+
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.android.ex.chips.Queries.Query;
-import com.android.ex.chips.transform.CircleTransform;
-import com.squareup.picasso.Picasso;
 
 /**
  * A class that inflates and binds the views in the dropdown list from
@@ -64,12 +61,14 @@ public class DropdownChipLayouter {
         final View itemView = reuseOrInflateView(convertView, parent, type);
 
         final ViewHolder viewHolder = new ViewHolder(itemView);
-
         bindTextToView(displayName, viewHolder.displayNameView);
+
+        String walleSource = entry.isWalleUser() ? "Walle" : "";
+        bindTextToView(walleSource, viewHolder.entrySource);
 
         if(showImage)
         {
-            Picasso.with(parent.getContext()).load(entry.getPhotoThumbnailUri()).transform(new CircleTransform()).into(viewHolder.imageView);
+            Picasso.with(parent.getContext()).load(entry.getPhotoThumbnailUri()).error(R.drawable.ic_contact_picture).transform(new CircleTransform()).into(viewHolder.imageView);
         }
 
         return itemView;
@@ -106,7 +105,7 @@ public class DropdownChipLayouter {
             return;
         }
 
-        if (text != null) {
+        if (text != null && text.length() > 0) {
             view.setText(text);
             view.setVisibility(View.VISIBLE);
         } else {
@@ -171,11 +170,13 @@ public class DropdownChipLayouter {
      */
     protected class ViewHolder {
         public final TextView displayNameView;
+        public final TextView entrySource;
         public final ImageView imageView;
 
         public ViewHolder(View view) {
             displayNameView = (TextView) view.findViewById(getDisplayNameResId());
             imageView = (ImageView) view.findViewById(getPhotoResId());
+            entrySource = (TextView) view.findViewById(R.id.source);
         }
     }
 }

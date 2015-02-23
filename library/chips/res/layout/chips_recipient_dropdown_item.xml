@@ -28,7 +28,7 @@
         style="@style/ChipIconStyle"
         android:layout_width="40dip"
         android:layout_height="40dip"
-        android:layout_marginLeft="10dp"
+        android:layout_marginLeft="50dp"
         android:layout_marginRight="10dp"
         android:cropToPadding="true"
         android:scaleType="centerCrop"
@@ -53,6 +53,13 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/source"
+            style="@style/ChipSubtitleStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true" />
 
     </LinearLayout>
 </LinearLayout>

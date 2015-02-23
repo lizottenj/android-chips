@@ -16,6 +16,8 @@
 
 package com.android.ex.chips;
 
+import com.android.ex.chips.DropdownChipLayouter.AdapterType;
+
 import android.accounts.Account;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -44,8 +46,6 @@ import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
 
-import com.android.ex.chips.DropdownChipLayouter.AdapterType;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -60,7 +60,7 @@ import java.util.Set;
 /**
  * Adapter for showing a recipient list.
  */
-public class BaseRecipientAdapter extends BaseAdapter implements Filterable, AccountSpecifier {
+public abstract class BaseRecipientAdapter extends BaseAdapter implements Filterable, AccountSpecifier {
     private static final String TAG = "BaseRecipientAdapter";
 
     private static final boolean DEBUG = true;
@@ -240,7 +240,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
      * An asynchronous filter used for loading two data sets: email rows from the local
      * contact provider and the list of {@link Directory}'s.
      */
-    private final class DefaultFilter extends Filter {
+    protected abstract class DefaultFilter extends Filter {
 
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
@@ -622,7 +622,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
     /** Will be called from {@link AutoCompleteTextView} to prepare auto-complete list. */
     @Override
     public Filter getFilter() {
-        return new DefaultFilter();
+        return null;
     }
 
     /**
@@ -759,16 +759,28 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
     protected List<RecipientEntry> constructEntryList(
             LinkedHashMap<Long, List<RecipientEntry>> entryMap,
             List<RecipientEntry> nonAggregatedEntries) {
+
         final List<RecipientEntry> entries = new ArrayList<RecipientEntry>();
         int validEntryCount = 0;
+
         for (Map.Entry<Long, List<RecipientEntry>> mapEntry : entryMap.entrySet()) {
             final List<RecipientEntry> entryList = mapEntry.getValue();
             final int size = entryList.size();
-            for (int i = 0; i < size; i++) {
-                RecipientEntry entry = entryList.get(i);
-                entries.add(entry);
-                tryFetchPhoto(entry, mContentResolver, this, false, i);
+
+            RecipientEntry walleUser = isWalleUser(entryList);
+            if(walleUser != null) {
+                // There was a walle user in this entry list
+                entries.add(walleUser);
+                tryFetchPhoto(walleUser, mContentResolver, this, false, 0);
                 validEntryCount++;
+            } else {
+                // No walle user lets add them all
+                for (int i = 0; i < size; i++) {
+                    RecipientEntry entry = entryList.get(i);
+                    entries.add(entry);
+                    tryFetchPhoto(entry, mContentResolver, this, false, i);
+                    validEntryCount++;
+                }
             }
 //            if (validEntryCount > mPreferredMaxResultCount) {
 //                break;
@@ -790,6 +802,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
         return entries;
     }
 
+    public abstract RecipientEntry isWalleUser(List<RecipientEntry> enteriesList);
 
     public interface EntriesUpdatedObserver {
         public void onChanged(List<RecipientEntry> entries);
@@ -1011,7 +1024,7 @@ public class BaseRecipientAdapter extends BaseAdapter implements Filterable, Acc
 
     @Override
     public int getViewTypeCount() {
-        return RecipientEntry.ENTRY_TYPE_SIZE;
+        return RecipientEntry.ENTRY_TYPE_COUNT;
     }
 
     @Override

@@ -39,7 +39,7 @@ public class RecipientEntry {
 
     public static final int ENTRY_TYPE_PERSON = 0;
 
-    public static final int ENTRY_TYPE_SIZE = 1;
+    public static final int ENTRY_TYPE_COUNT = 1;
 
     private final int mEntryType;
 
@@ -48,6 +48,11 @@ public class RecipientEntry {
      * name, while the second or later entries won't.
      */
     private boolean mIsFirstLevel;
+
+    /**
+     * This should be set to true if the user is a walle user
+     */
+    private boolean mIsWalleUser = false;
     private final String mDisplayName;
 
     /** Destination for this contact entry. Would be an email address or a phone number. */
@@ -268,5 +273,13 @@ public class RecipientEntry {
     @Override
     public String toString() {
         return mDisplayName + " <" + mDestination + ">, isValid=" + mIsValid;
+    }
+
+    public boolean isWalleUser() {
+        return mIsWalleUser;
+    }
+
+    public void setWalleUser(boolean isWalleUser) {
+        mIsWalleUser = isWalleUser;
     }
 }
