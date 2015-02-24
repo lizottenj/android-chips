@@ -1044,8 +1044,20 @@ public abstract class BaseRecipientAdapter extends BaseAdapter implements Filter
         final String constraint = mCurrentConstraint == null ? null :
                 mCurrentConstraint.toString();
 
+        boolean isSectionDivider = false;
+
+        if (position == 0 && entry.isWalleUser()) {
+            isSectionDivider = true;
+        } else if (position > 1 && !entry.isWalleUser()) {
+            RecipientEntry priorEntry = getEntries().get(position - 1);
+            if (priorEntry.isWalleUser()) {
+                isSectionDivider = true;
+            }
+
+        }
+
         return mDropdownChipLayouter.bindView(convertView, parent, entry, position,
-                AdapterType.BASE_RECIPIENT, constraint);
+                AdapterType.BASE_RECIPIENT, constraint, isSectionDivider);
     }
 
     public Account getAccount() {
