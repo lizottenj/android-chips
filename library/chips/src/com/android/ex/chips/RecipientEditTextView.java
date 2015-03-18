@@ -420,18 +420,21 @@ public class RecipientEditTextView extends MultiAutoCompleteTextView implements
     @Override
     public <T extends ListAdapter & Filterable> void setAdapter(T adapter) {
         super.setAdapter(adapter);
-        BaseRecipientAdapter baseAdapter = (BaseRecipientAdapter) adapter;
-        baseAdapter.registerUpdateObserver(new BaseRecipientAdapter.EntriesUpdatedObserver() {
-            @Override
-            public void onChanged(List<RecipientEntry> entries) {
-                // Scroll the chips field to the top of the screen so
-                // that the user can see as many results as possible.
-                if (entries != null && entries.size() > 0) {
-                    scrollBottomIntoView();
+
+        if(adapter != null) {
+            BaseRecipientAdapter baseAdapter = (BaseRecipientAdapter) adapter;
+            baseAdapter.registerUpdateObserver(new BaseRecipientAdapter.EntriesUpdatedObserver() {
+                @Override
+                public void onChanged(List<RecipientEntry> entries) {
+                    // Scroll the chips field to the top of the screen so
+                    // that the user can see as many results as possible.
+                    if (entries != null && entries.size() > 0) {
+                        scrollBottomIntoView();
+                    }
                 }
-            }
-        });
-        baseAdapter.setDropdownChipLayouter(mDropdownChipLayouter);
+            });
+            baseAdapter.setDropdownChipLayouter(mDropdownChipLayouter);
+        }
     }
 
     protected void scrollBottomIntoView() {
